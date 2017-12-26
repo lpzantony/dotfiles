@@ -1,0 +1,16 @@
+{
+	"bootstrapped": true,
+	"in_process_packages":
+	[
+	],
+	"installed_packages":
+	[
+		"Agila Theme",
+		"Clang Format",
+		"EasyClangComplete",
+		"Gitignored File Excluder",
+		"Markdown Preview",
+		"Package Control",
+		"Theme - Piatto"
+	]
+}
