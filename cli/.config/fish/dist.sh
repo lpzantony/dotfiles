@@ -14,7 +14,7 @@ if [[ $(uname) == Linux ]]; then
 	elif [[ $(uname -r | grep -i arch) != "" ]]; then
 		echo -n 
 	elif [[ $(uname -r | grep -i MANJARO) != "" ]]; then
-		echo -n 
+		echo -n 
 	else
 		echo -n 
 	fi
