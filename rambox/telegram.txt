@@ -58,8 +58,8 @@ applycss(`
 
 
 
-
-
+/* Red */
+/*
 :root {
     --main-dark: #B35843;
     --main: #FF7B5D;
@@ -67,6 +67,19 @@ applycss(`
     --gray-bg: #262A2E;
     --gray-dark: #2B3034;
     --gray: #2F353A;
+    --light: #AAAAAA;
+    --text: #959595;
+  }
+*/
+
+  /* Aqua */
+  :root {
+    --main-dark: #5B8E90;
+    --main: #77BABC;
+    --main-light: #8ED1CC;
+    --gray-bg: #1D1D24;
+    --gray-dark: #23232D;
+    --gray: #2C2C36;
     --light: #AAAAAA;
     --text: #959595;
   }
