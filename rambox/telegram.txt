@@ -1,0 +1,481 @@
+function applycss(css){
+    var head = document.getElementsByTagName('head')[0];
+    var s = document.createElement('style');
+    s.setAttribute('type', 'text/css');
+    s.appendChild(document.createTextNode(css));
+    head.appendChild(s);
+ }
+applycss(`
+
+.im_page_wrap {
+    max-width: none;
+}
+.tg_head_split {
+    max-width: none;
+}
+
+.footer_wrap {
+    display: none;
+}
+.footer_empty {
+    display: none;
+}
+
+.im_dialogs_col_wrap {
+    max-width: 370px;
+    padding-bottom: 0px;
+}
+.tg_head_logo_wrap {
+    max-width: 370px;
+}
+
+.im_history_col_wrap {
+    min-width: 69%;
+    width: calc(100% - 370px);
+}
+.tg_head_main_wrap {
+    min-width: 69%;
+    width: calc(100% - 370px);
+}
+
+.im_message_wrap {
+    max-width: none;
+}
+.im_send_panel_wrap {
+    max-width: none;
+    padding-bottom: 11px;
+}
+.im_send_form {
+    max-width: none;
+}
+
+.im_edit_panel_wrap {
+    margin: 0 12px 0 12px;
+    padding-bottom: 31px;
+}
+
+
+
+
+
+
+
+:root {
+    --main-dark: #B35843;
+    --main: #FF7B5D;
+    --main-light: #FF926D;
+    --gray-bg: #262A2E;
+    --gray-dark: #2B3034;
+    --gray: #2F353A;
+    --light: #AAAAAA;
+    --text: #959595;
+  }
+  .icon-about,
+  .icon-camera,
+  .icon-contacts,
+  .icon-emoji,
+  .icon-faq,
+  .icon-keyboard,
+  .icon-message-views,
+  .icon-mic,
+  .icon-new-group,
+  .icon-paperclip,
+  .icon-select-tick,
+  .icon-settings,
+  .icon-slash,
+  .im_message_file_button_icon,
+  .md_modal_split_action_camera,
+  .md_modal_split_action_msg,
+  .md_modal_split_action_twitter {
+    -webkit-filter: hue-rotate(160deg);
+            filter: hue-rotate(160deg);
+  }
+  .composer_emoji_tooltip_category.active i,
+  .im_dialog_pinned {
+    -webkit-filter: brightness(50%) sepia(1) hue-rotate(-26.6deg) saturate(308.4%) brightness(108.4%);
+            filter: brightness(50%) sepia(1) hue-rotate(-26.6deg) saturate(308.4%) brightness(108.4%);
+  }
+  
+
+  body,
+  html {
+    color: var(--text);
+    background-color: var(--gray-bg)!important;
+  }
+  .btn-link:hover,
+  .btn-md:hover,
+  .btn-primary.active,
+  .btn-primary:active,
+  .btn-primary:focus,
+  .btn-primary:hover,
+  .composer_sticker_btn:hover,
+  .contacts_modal_col .nano > .nano-pane > .nano-slider,
+  .countries_modal_col .nano > .nano-pane > .nano-slider,
+  .im_dialog_unread,
+  .im_dialogs_col .nano > .nano-pane > .nano-slider,
+  .im_dialogs_modal_col .nano > .nano-pane > .nano-slider,
+  .im_dialogs_scrollable_wrap .active a.im_dialog,
+  .im_dialogs_scrollable_wrap .active a.im_dialog:hover,
+  .im_history_col .nano > .nano-pane > .nano-slider,
+  .nav-pills > li.active > a,
+  .open .btn-primary.dropdown-toggle,
+  .reply_markup_button:focus,
+  .reply_markup_button:hover,
+  .sessions_modal_col .nano > .nano-pane > .nano-slider,
+  .stickerset_modal_col .nano > .nano-pane > .nano-slider,
+  .stickerset_modal_sticker_wrap:hover,
+  .tg_checkbox.tg_checkbox_on span.icon-checkbox-outer,
+  a.composer_emoji_btn:hover,
+  a.tgme_action_button_new:active,
+  a.tgme_action_button_new:hover {
+    background-color: var(--main-dark);
+  }
+  .im_message_outer_wrap span.im_message_sign_link,
+  .im_message_outer_wrap.hasselect:hover span.im_message_sign_link,
+  .im_submit_send_label,
+  a.im_dialog .im_short_message_media,
+  a.im_dialog .im_short_message_service {
+    color: var(--main-dark);
+  }
+  .audio_player_seek_slider .tg_slider_track_fill,
+  .audio_player_volume_slider .tg_slider_thumb,
+  .audio_player_volume_slider .tg_slider_track_fill,
+  .composer_dropdown li a:hover,
+  .composer_emoji_tooltip_tab_shadow,
+  .im_dialog_badge_muted,
+  .im_send_reply_cancel:hover .icon-reply-bar,
+  .tg_checkbox.tg_checkbox_on i.icon-checkbox-inner,
+  .tg_down_progress .progress-bar,
+  .tg_radio.tg_radio_on i.icon-radio,
+  .tg_slider_thumb,
+  .tg_slider_track_fill,
+  .tgme_head_wrap,
+  a.tg_radio_on:hover i.icon-radio {
+    background-color: var(--main);
+  }
+  .btn-link.dropdown-toggle,
+  .composer_command_value,
+  .composer_emoji_tooltip_tab_emoji,
+  .composer_emoji_tooltip_tabs_stickers_active .composer_emoji_tooltip_tab_stickers,
+  .dropdown-toggle,
+  .im_message_author,
+  .im_message_document_name,
+  .im_message_fwd_author,
+  .im_submit_send_label:focus,
+  .im_submit_send_label:hover,
+  .md_modal_section_param_name,
+  a strong,
+  a {
+    color: var(--main)!important;
+  }
+  .active .im_dialog_unread,
+  .icon-message-status,
+  a.im_dialog:hover .im_dialog_unread {
+    background-color: var(--main-light);
+  }
+  .btn.btn-link.dropdown-toggle:hover,
+  .im_message_author:hover,
+  .im_message_fwd_author:hover,
+  a strong:hover,
+  a:hover {
+    color: var(--main-light)!important;
+  }
+  .badge,
+  .btn-link:hover,
+  .btn-md:hover,
+  .btn-primary.active,
+  .btn-primary:active,
+  .btn-primary:focus,
+  .btn-primary:hover,
+  .btn:hover .im_selected_count,
+  .open .btn-primary.dropdown-toggle,
+  .reply_markup_button:focus,
+  .reply_markup_button:hover,
+  a.tgme_action_button:focus,
+  a.tgme_action_button:hover,
+  a.tgme_action_button_new:focus,
+  a.tgme_action_button_new:hover {
+    color: var(--gray-bg)!important;
+  }
+  .composer_command_option,
+  .composer_emoji_tooltip,
+  .contacts_modal_search_field,
+  .contacts_modal_search_field:active,
+  .contacts_modal_search_field:focus,
+  .countries_modal_search_field,
+  .countries_modal_search_field:active,
+  .countries_modal_search_field:focus,
+  .dropdown-menu,
+  .error_modal_wrap,
+  .icon-tooltip-tail,
+  .im_bottom_panel_wrap,
+  .im_dialogs_col_wrap,
+  .im_dialogs_panel,
+  .im_dialogs_scrollable_wrap a.im_dialog_searchpeer,
+  .im_dialogs_search_field,
+  .im_dialogs_search_field:active,
+  .im_dialogs_search_field:focus,
+  .im_history_empty_wrap,
+  .im_history_messages,
+  .im_history_not_selected,
+  .im_history_pinned_wrap,
+  .im_history_typing_wrap,
+  .im_message_outer_wrap,
+  .im_page_split,
+  .im_page_wrap,
+  .im_record_bg,
+  .im_service_message_wrap,
+  .login_footer_about_wrap,
+  .login_form_wrap,
+  .md-input,
+  .md_modal_body,
+  .md_modal_footer,
+  .md_simple_modal_wrap,
+  .tg_head_split,
+  a.im_dialog,
+  a.tgme_head_dl_button {
+    background-color: var(--gray-dark);
+  }
+  .btn,
+  .composer_dropdown li a.composer_command_option:hover,
+  .composer_dropdown_wrap,
+  .contacts_modal_col .nano > .nano-pane,
+  .contacts_modal_members_list a.contacts_modal_contact:hover,
+  .countries_modal_col .nano > .nano-pane,
+  .countries_scrollable_wrap a.countries_modal_country:hover,
+  .dropdown-menu .divider,
+  .dropdown-menu > li > a:focus,
+  .dropdown-menu > li > a:hover,
+  .dropdown.open .tg_head_btn,
+  .im_dialogs_modal_col .nano > .nano-pane,
+  .im_dialogs_scrollable_wrap a.im_dialog:hover,
+  .im_history_col .nano > .nano-pane,
+  .im_message_reply_border,
+  .im_message_selected .im_message_outer_wrap,
+  .im_message_unread_split,
+  .login_head_bg,
+  .md_modal_head,
+  .md_modal_section_splitter,
+  .media_modal_wrap,
+  .sessions_modal_col .nano > .nano-pane,
+  .stickerset_modal_col .nano > .nano-pane,
+  .tg_head_btn:hover,
+  .tg_head_logo_dropdown .dropdown-menu > li > a:hover,
+  .tg_head_peer_dropdown .dropdown-menu > li > a:hover,
+  a.tgme_head_dl_button:active,
+  a.tgme_head_dl_button:hover {
+    background-color: var(--gray);
+  }
+  .button,
+  .im_history_select_active .im_message_outer_wrap:hover,
+  .im_message_file_button,
+  .tg_slider_track,
+  .tgme_page_web_action a.tgme_action_button,
+  a.tgme_action_button,
+  a.tgme_action_button_new {
+    background-color: var(--gray);
+  }
+  .countries_scrollable_wrap a.countries_modal_country:hover .countries_modal_country_code,
+  .im_bot_intro_message_wrap,
+  .im_dialog_peer,
+  .im_history_select_active .im_message_outer_wrap:hover .im_message_audio_duration,
+  .im_history_select_active .im_message_outer_wrap:hover .im_message_audio_size,
+  .im_history_select_active .im_message_outer_wrap:hover .im_message_author_admin,
+  .im_history_select_active .im_message_outer_wrap:hover .im_message_date,
+  .im_history_select_active .im_message_outer_wrap:hover .im_message_document_size,
+  .im_history_select_active .im_message_outer_wrap:hover .im_message_fwd_date,
+  .im_history_select_active .im_message_outer_wrap:hover .im_message_views_cnt,
+  .im_message_focus_active .audio_player_duration,
+  .im_message_focus_active .audio_player_size,
+  .im_message_focus_active .im_message_author_admin,
+  .im_message_focus_active .im_message_date,
+  .im_message_focus_active .im_message_document_size,
+  .im_message_focus_active .im_message_edited,
+  .im_message_focus_active .im_message_fwd_date,
+  .im_message_focus_active .im_message_views_cnt,
+  .im_message_reply_author,
+  .im_message_selected .im_message_audio_duration,
+  .im_message_selected .im_message_audio_size,
+  .im_message_selected .im_message_author_admin,
+  .im_message_selected .im_message_date,
+  .im_message_selected .im_message_document_size,
+  .im_message_selected .im_message_fwd_date,
+  .im_message_selected .im_message_views_cnt,
+  .im_message_unread_split,
+  .im_service_message,
+  .login_form_head,
+  .md_modal_head,
+  .peer_modal_profile_description,
+  .tg_checkbox.tg_checkbox_on span.icon-checkbox-outer,
+  .tg_head_peer_title,
+  .tgme_page_title,
+  a.contacts_modal_contact:hover .md_modal_list_peer_description,
+  a.im_dialog .im_dialog_chat_from_wrap,
+  a.im_dialog:hover .im_dialog_date,
+  h3 {
+    color: var(--light);
+  }
+  .btn,
+  .composer_command_desc,
+  .composer_command_option:hover .composer_command_desc,
+  .form-control,
+  .im_page_wrap,
+  .im_selected_count,
+  .inactive_title,
+  .login_footer_wrap,
+  .md-input,
+  .md_modal_list_peer_description .status_online,
+  .md_modal_list_peer_description.status_online,
+  .reply_markup_button,
+  .tg_head_connecting_text,
+  .tg_head_peer_status,
+  .tgme_page_wrap,
+  a.im_dialog .im_short_message_text,
+  a.tgme_action_button,
+  a.tgme_action_button_new {
+    color: var(--text)!important;
+  }
+  .active a.im_dialog .im_short_message_text {
+    color: #FFFFFF!important;
+  }
+  .tgme_page_web_action a.tgme_action_button:active,
+  .tgme_page_web_action a.tgme_action_button:hover {
+    background-color: #5DC390;
+  }
+  .im_service_message {
+    margin: 0;
+    padding: 9px 7px;
+  }
+  .im_dialogs_panel {
+    padding: 8px;
+  }
+  /* Borders */
+  .tg_radio .icon-radio-outer,
+  a strong,
+  a {
+    border: 0;
+    border-radius: 0;
+  }
+  .contacts_modal_search_field,
+  .im_dialogs_search_field,
+  .im_dialogs_search_field:active,
+  .im_dialogs_search_field:focus,
+  .im_edit_panel_border,
+  .tg_radio.tg_radio_on .icon-radio-outer {
+    border-color: var(--gray-dark)!important;
+  }
+  .composer_dropdown_wrap,
+  .composer_emoji_tooltip,
+  .countries_modal_search_field,
+  .countries_modal_search_field:active,
+  .countries_modal_search_field:focus,
+  .icon-tooltip-tail,
+  .im_page_wrap,
+  .login_footer_about_wrap,
+  .login_form_wrap,
+  .tg_head_logo_dropdown.open .dropdown-menu,
+  .tg_head_peer_dropdown .dropdown-menu {
+    border: 1px solid var(--gray)!important;
+  }
+  .tg_head_split {
+    border-right: 1px solid var(--gray);
+    border-left: 1px solid var(--gray);
+  }
+  .im_bottom_panel_wrap {
+    border-top: 1px solid var(--gray);
+  }
+  .im_dialogs_col_wrap,
+  .tg_head_logo_wrap {
+    border-right: 1px solid var(--gray);
+  }
+  .im_history_col_wrap {
+    border-left: 1px solid var(--gray);
+  }
+  .im_dialog_wrap,
+  .im_dialogs_panel,
+  .im_history_pinned_wrap,
+  .md-input-group,
+  .md_modal_iconed_section_wrap {
+    border-bottom: 1px solid var(--gray);
+  }
+  .im_message_webpage_wrap {
+    border-left-color: var(--gray);
+  }
+  .md_modal_section_splitter {
+    border-top-color: var(--main-dark);
+  }
+  /* Box-shadows */
+  .composer_emoji_tooltip_tab_shadow {
+    -webkit-box-shadow: 0 1px 0 var(--main);
+            box-shadow: 0 1px 0 var(--main);
+  }
+  .composer_rich_textarea,
+  .composer_textarea,
+  .login_footer_about_wrap,
+  .login_form_wrap {
+    -webkit-box-shadow: 0 1px 0 var(--gray);
+            box-shadow: 0 1px 0 var(--gray);
+  }
+  .composer_rich_textarea:focus {
+    -webkit-box-shadow: 0 2px 0 0 var(--main-dark);
+            box-shadow: 0 2px 0 0 var(--main-dark);
+  }
+  .md_modal_section_splitter {
+    -webkit-box-shadow: inset 0 1px 0.3px var(--main-dark);
+            box-shadow: inset 0 1px 0.3px var(--main-dark);
+  }
+  .composer_dropdown_wrap,
+  .im_page_wrap,
+  .tg_head_logo_dropdown .dropdown-menu,
+  .tg_head_peer_dropdown .dropdown-menu {
+    -webkit-box-shadow: none;
+            box-shadow: none;
+  }
+  .btn.btn-link.dropdown-toggle,
+  .im_submit_send,
+  .im_submit_send:focus,
+  .im_submit_send:hover {
+    background-color: transparent;
+  }
+  .im_message_focus_active .im_message_outer_wrap {
+    -webkit-animation-duration: 2s;
+            animation-duration: 2s;
+  }
+  @-webkit-keyframes im_message_focus_fade {
+    from {
+      background-color: var(--gray);
+    }
+  }
+  @keyframes im_message_focus_fade {
+    from {
+      background-color: var(--gray);
+    }
+  }
+  ::-moz-selection {
+    background-color: var(--main);
+    color: #FFFFFF;
+  }
+  ::selection {
+    background-color: var(--main);
+    color: #FFFFFF;
+  }
+  /* Progress arc */
+  .progress-arc-intermediate .progress-arc .progress-arc-bar {
+    stroke: var(--main);
+  }
+  .stop0,
+  .stop60,
+  .stop100 {
+    stop-color: var(--main);
+  }
+  /* Hue rotation */
+  .composer_emoji_tooltip_category i {
+    -webkit-filter: invert(100%);
+            filter: invert(100%);
+  }
+  .active .im_dialog_pinned {
+    -webkit-filter: brightness(250%); /* white */
+            filter: brightness(250%);
+  }
+
+`);
