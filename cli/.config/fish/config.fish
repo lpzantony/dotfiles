@@ -90,7 +90,28 @@ export EDITOR=vim
 # VirtualEnv setup
 set VIRTUAL_ENV_DISABLE_PROMPT true
 
+# CUSTOM
 
+function sudo
+    if test "$argv" = !!
+    eval command sudo $history[1]
+else
+    command sudo $argv
+    end
+end
+
+alias fucking "sudo"
+alias nf "neofetch"
+alias gst "git st"
+alias gcm "git cm"
+alias rst "tput reset"
+alias hextodec 'printf "%d\n"'
+alias dectohex 'printf "%x\n"'
+alias gcma "git commit --amend"
+alias grc "git rebase --continue"
+alias gdt "git difftool -y -t meld"
+alias gcf "git clean -df"
+alias tiga "tig --all"
 # Custom config file to avoid overwrite at each update. Put config-specific data into it
 if test -e ~/.fishrc
 	source ~/.fishrc
