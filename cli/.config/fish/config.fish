@@ -90,6 +90,12 @@ export EDITOR=vim
 # VirtualEnv setup
 set VIRTUAL_ENV_DISABLE_PROMPT true
 
+
+# Custom config file to avoid overwrite at each update. Put config-specific data into it
+if test -e ~/.fishrc
+	source ~/.fishrc
+end
+
 # CUSTOM
 
 function sudo
@@ -112,8 +118,4 @@ alias grc "git rebase --continue"
 alias gdt "git difftool -y -t meld"
 alias gcf "git clean -df"
 alias tiga "tig --all"
-# Custom config file to avoid overwrite at each update. Put config-specific data into it
-if test -e ~/.fishrc
-	source ~/.fishrc
-end
 
