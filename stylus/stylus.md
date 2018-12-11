@@ -12,6 +12,7 @@ Here are all the [Stylus](https://addons.mozilla.org/fr/firefox/addon/styl-us/) 
 - [GitLab](https://userstyles.org/styles/164242/gitlab-gitlub-dark-theme)
 - [GitHub](https://userstyles.org/styles/37035/github-dark)
 - [Google](https://userstyles.org/styles/144028/google-clean-dark)
+- [Google Keep](https://userstyles.org/styles/161659/google-keep-darker-matters)
 - [New Tab](https://addons.mozilla.org/fr/firefox/addon/new-tab-tools/)
 
  
