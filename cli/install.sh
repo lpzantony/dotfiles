@@ -16,6 +16,15 @@ elif [[ $(uname -a | grep \.el\[0-9\]+\.) != "" ]]; then # CentOS / RedHat
 	do_install bash .bashrc.centos ~/.bashrc
 fi
 
+
+# bashrc
+read -p "Install the bash config? (Y/n) " do_install_bash
+if [[ -z $do_install_bash || $do_install_bash =~ ^y(es)?$ ]]; then
+
+	cp -f -r .bash ~/.bash
+	cp -f .bashrc ~/.bashrc
+fi
+
 # fish config
 read -p "Install the fish config? (Y/n) " do_install_fish
 if [[ -z $do_install_fish || $do_install_fish =~ ^y(es)?$ ]]; then
