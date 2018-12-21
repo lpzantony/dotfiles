@@ -25,6 +25,12 @@ if [[ -z $do_install_bash || $do_install_bash =~ ^y(es)?$ ]]; then
 	cp -f .bashrc ~/.bashrc
 fi
 
+# git
+read -p "Install the git config? (it will erase current one) (Y/n) " do_install_git
+if [[ -z $do_install_bash || $do_install_bash =~ ^y(es)?$ ]]; then
+	cp -f .gitconfig ~/.gitconfig
+fi
+
 # fish config
 read -p "Install the fish config? (Y/n) " do_install_fish
 if [[ -z $do_install_fish || $do_install_fish =~ ^y(es)?$ ]]; then
