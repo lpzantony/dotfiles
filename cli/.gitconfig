@@ -4,10 +4,10 @@
 	br = branch
 	st = status
 	unstage = reset HEAD --
-  uncm = reset HEAD^
+	uncm = reset HEAD^
 	last = log -1 HEAD
 	smup = submodule update --init --recursive
 	fap = fetch --all --prune --tags
-	undo_rebase = reset --hard ORIG_HEAD
+	undo-rebase = reset --hard ORIG_HEAD
 [core]
 	editor = vim
