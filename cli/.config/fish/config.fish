@@ -118,4 +118,4 @@ alias grc "git rebase --continue"
 alias gdt "git difftool -y -t meld"
 alias gcf "git clean -df"
 alias tiga "tig --all"
-
+alias pinta "env LANG=C pinta"
