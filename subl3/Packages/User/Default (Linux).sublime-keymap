@@ -1,3 +1,4 @@
 [
-	{ "keys": ["ctrl+<"], "command": "reindent", "args": {"single_line": false}}
+	{ "keys": ["ctrl+<"], "command": "reindent", "args": {"single_line": false}},
+	{"keys": ["alt+d"], "command": "display_diagrams"}
 ]

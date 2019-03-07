@@ -37,9 +37,12 @@ class SettingsStorage:
         PREFIXES (str[]): setting prefixes supported by this plugin
     """
     FLAG_SOURCES = ["CMakeLists.txt",
+                    "Makefile",
                     "compile_commands.json",
+                    "CppProperties.json",
+                    "c_cpp_properties.json",
                     ".clang_complete"]
-    FLAG_SOURCES_ENTRIES_WITH_PATHS = ["search_in", "prefix_paths"]
+    FLAG_SOURCES_ENTRIES_WITH_PATHS = ["search_in", "prefix_paths", "flags"]
 
     PREFIXES = ["ecc_", "easy_clang_complete_"]
 
@@ -49,41 +52,46 @@ class SettingsStorage:
 
     PROGRESS_STYLES = [COLOR_SUBLIME_STYLE_TAG, MOON_STYLE_TAG, NONE_STYLE_TAG]
 
-    POPUPS_STYLE = "popups"
-    PHANTOMS_STYLE = "phantoms"
-    NONE_STYLE = "none"
-    ERROR_STYLES = [POPUPS_STYLE, PHANTOMS_STYLE, NONE_STYLE]
-
     GUTTER_COLOR_STYLE = "color"
     GUTTER_MONO_STYLE = "mono"
-    GUTTER_STYLES = [GUTTER_COLOR_STYLE, GUTTER_MONO_STYLE, NONE_STYLE]
+    GUTTER_DOT_STYLE = "dot"
+    NONE_STYLE = "none"
+
+    GUTTER_STYLES = [GUTTER_COLOR_STYLE,
+                     GUTTER_MONO_STYLE,
+                     GUTTER_DOT_STYLE,
+                     NONE_STYLE]
 
     # refer to Preferences.sublime-settings for usage explanation
     NAMES_ENUM = [
         "autocomplete_all",
-        "c_flags",
         "clang_binary",
         "cmake_binary",
         "common_flags",
-        "cpp_flags",
-        "errors_style",
         "flags_sources",
+        "gutter_style",
+        "header_to_source_mapping",
         "hide_default_completions",
+        "ignore_list",
         "include_file_folder",
         "include_file_parent_folder",
+        "lang_flags",
         "libclang_path",
-        "gutter_style",
         "max_cache_age",
-        "objective_c_flags",
-        "objective_cpp_flags",
+        "popup_maximum_height",
+        "popup_maximum_width",
         "progress_style",
-        "show_type_info",
+        "show_errors",
+        "show_index_references",
         "show_type_body",
+        "show_type_info",
+        "target_compilers",
         "triggers",
+        "use_default_includes",
         "use_libclang",
         "use_libclang_caching",
+        "valid_lang_syntaxes",
         "verbose",
-        "header_to_source_mapping",
     ]
 
     def __init__(self, settings_handle):
@@ -110,17 +118,18 @@ class SettingsStorage:
             view (sublime.View): current view
         """
         try:
-            # init current and parrent folders:
+            # Init current and parent folders.
             if not Tools.is_valid_view(view):
                 log.error("no view to populate common flags from")
                 return
             self.__load_vars_from_settings(view.settings(),
                                            project_specific=True)
-            # initialize wildcard values with view
+            # Initialize wildcard values with view.
             self.__update_wildcard_values(view)
-            # replace wildcards
+            # Replace wildcards in various paths.
             self.__populate_common_flags(view.file_name())
             self.__populate_flags_source_paths()
+            self.__update_ignore_list()
             self.libclang_path = self.__replace_wildcard_if_needed(
                 self.libclang_path)
             self.clang_binary = self.__replace_wildcard_if_needed(
@@ -170,10 +179,6 @@ class SettingsStorage:
             error_msg = "Progress style '{}' is not one of {}".format(
                 self.progress_style, SettingsStorage.PROGRESS_STYLES)
             return False, error_msg
-        if self.errors_style not in SettingsStorage.ERROR_STYLES:
-            error_msg = "Error style '{}' is not one of {}".format(
-                self.errors_style, SettingsStorage.ERROR_STYLES)
-            return False, error_msg
         if self.gutter_style not in SettingsStorage.GUTTER_STYLES:
             error_msg = "Gutter style '{}' is not one of {}".format(
                 self.gutter_style, SettingsStorage.GUTTER_STYLES)
@@ -186,6 +191,20 @@ class SettingsStorage:
             if source_dict["file"] not in SettingsStorage.FLAG_SOURCES:
                 error_msg = "flag source '{}' is not one of {}".format(
                     source_dict["file"], SettingsStorage.FLAG_SOURCES)
+                return False, error_msg
+        # Check if all languages are present in language-specific settings.
+        for lang_tag in Tools.LANG_TAGS:
+            if lang_tag not in self.lang_flags.keys():
+                error_msg = "lang '{}' is not in {}".format(
+                    lang_tag, self.lang_flags)
+                return False, error_msg
+            if lang_tag not in self.valid_lang_syntaxes:
+                error_msg = "No '{}' in syntaxes '{}'".format(
+                    lang_tag, self.valid_lang_syntaxes)
+                return False, error_msg
+            if lang_tag not in self.target_compilers:
+                error_msg = "No '{}' in syntaxes '{}'".format(
+                    lang_tag, self.target_compilers)
                 return False, error_msg
         return True, ""
 
@@ -262,6 +281,15 @@ class SettingsStorage:
         if self.include_file_parent_folder:
             self.common_flags.append("-I" + file_parent_folder)
 
+    def __update_ignore_list(self):
+        """Populate variables inside flags sources."""
+        if not self.ignore_list:
+            log.critical(" Cannot update paths of ignore list.")
+            return
+        for idx, path_to_ignore in enumerate(self.ignore_list):
+            self.ignore_list[idx] = self.__replace_wildcard_if_needed(
+                path_to_ignore)
+
     def __replace_wildcard_if_needed(self, line):
         """Replace wildcards in a line if they are present there.
 
@@ -271,7 +299,8 @@ class SettingsStorage:
         Returns:
             str: line with replaced wildcards
         """
-        res = sublime.expand_variables(line, self._wildcard_values)
+        res = path.expandvars(line)
+        res = sublime.expand_variables(res, self._wildcard_values)
         if Wildcards.HOME_PATH in res:
             # replace '~' by full home path. Leave everything else intact.
             prefix_idx = res.index(Wildcards.HOME_PATH)

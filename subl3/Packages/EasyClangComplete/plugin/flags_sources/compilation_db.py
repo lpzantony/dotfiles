@@ -5,8 +5,8 @@ Attributes:
 """
 from .flags_source import FlagsSource
 from ..tools import File
-from ..tools import singleton
 from ..utils.unique_list import UniqueList
+from ..utils.singleton import ComplationDbCache
 
 from os import path
 from fnmatch import fnmatch
@@ -14,12 +14,6 @@ from fnmatch import fnmatch
 import logging
 
 log = logging.getLogger("ECC")
-
-
-@singleton
-class ComplationDbCache(dict):
-    """Singleton for compilation database cache."""
-    pass
 
 
 class CompilationDb(FlagsSource):
@@ -32,7 +26,7 @@ class CompilationDb(FlagsSource):
     _FILE_NAME = "compile_commands.json"
 
     def __init__(self, include_prefixes,
-                 header_to_source_map=None):
+                 header_to_source_map):
         """Initialize a compilation database.
 
         Args:
@@ -65,7 +59,10 @@ class CompilationDb(FlagsSource):
         log.debug("[db]:[get]: for file %s", file_path)
         cached_db_path = self._get_cached_from(file_path)
         log.debug("[db]:[cached]: '%s'", cached_db_path)
-        current_db_path = self._find_current_in(search_scope)
+        current_db_file = File.search(self._FILE_NAME, search_scope)
+        if not current_db_file:
+            return None
+        current_db_path = current_db_file.full_path
         log.debug("[db]:[current]: '%s'", current_db_path)
         db = None
         parsed_before = current_db_path in self._cache
@@ -85,7 +82,7 @@ class CompilationDb(FlagsSource):
                 return None
             if cached_db_path and cached_db_path in self._cache:
                 del self._cache[cached_db_path]
-            db = self._parse_database(File(current_db_path))
+            db = self._parse_database(current_db_file)
             log.debug("[db]: put into cache: '%s'", current_db_path)
             self._cache[current_db_path] = db
         # return nothing if we failed to load the db
@@ -117,9 +114,10 @@ class CompilationDb(FlagsSource):
             unique entries for 'all' entry.
         """
         import json
+
         data = None
 
-        with open(database_file.full_path()) as data_file:
+        with open(database_file.full_path) as data_file:
             data = json.load(data_file)
         if not data:
             return None
@@ -128,10 +126,10 @@ class CompilationDb(FlagsSource):
         unique_list_of_flags = UniqueList()
         for entry in data:
             file_path = File.canonical_path(entry['file'],
-                                            database_file.folder())
+                                            database_file.folder)
             argument_list = []
 
-            base_path = database_file.folder()
+            base_path = database_file.folder
             if 'directory' in entry:
                 base_path = entry['directory']
 

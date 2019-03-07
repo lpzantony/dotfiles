@@ -74,16 +74,25 @@
 		"/volumes/sdata/TPT/3A/SE302/git/TP/TP_STM32/.dep",
 		"/volumes/sdata/TPT/3A/SE302/git/TP/ChibiOS_17.6.1/doc/hal/html"
 	],
-	"font_size": 11,
+	"font_size": 12,
 	"highlight_line": false,
 	"highlight_modified_tabs": true,
 	"ignored_packages":
 	[
+		"PlantUmlDiagrams",
+		"RestructuredText",
 		"Vintage"
 	],
 	"line_padding_bottom": 3,
 	"line_padding_top": 3,
 	"overlay_scroll_bars": "enabled",
+	"rulers":
+	[
+		80,
+		100,
+		120
+	],
+	"tab_size": 2,
 	"theme": "Piatto Dark.sublime-theme",
 	"trim_trailing_white_space_on_save": true,
 	"update_check": false

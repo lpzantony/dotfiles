@@ -24,6 +24,7 @@ def has_libclang():
     return True
 
 
+# TODO(@kjteske): For now the tests seem to not be working for binary completer
 def should_run_objc_tests():
     """Decide if Objective C tests should be run.
 
@@ -73,7 +74,6 @@ class BaseTestCompleter(object):
                               'test_files',
                               'test.cpp')
         self.check_view(file_name)
-        self.tear_down()
 
     def test_init(self):
         """Test that the completer is properly initialized."""
@@ -85,7 +85,6 @@ class BaseTestCompleter(object):
 
         self.assertIsNotNone(completer.version_str)
         self.tear_down_completer()
-        self.tear_down()
 
     def test_complete(self):
         """Test autocompletion for user type."""
@@ -112,7 +111,6 @@ class BaseTestCompleter(object):
 
         self.assertIn(expected, completions)
         self.tear_down_completer()
-        self.tear_down()
 
     def test_excluded_private(self):
         """Test autocompletion for user type."""
@@ -141,7 +139,6 @@ class BaseTestCompleter(object):
             self.assertIn(expected, completions)
             self.assertNotIn(unexpected, completions)
         self.tear_down_completer()
-        self.tear_down()
 
     def test_excluded_destructor(self):
         """Test autocompletion for user type."""
@@ -170,7 +167,6 @@ class BaseTestCompleter(object):
         else:
             self.assertIn(destructor, completions)
         self.tear_down_completer()
-        self.tear_down()
 
     def test_complete_vector(self):
         """Test that we can complete vector members."""
@@ -196,11 +192,10 @@ class BaseTestCompleter(object):
         expected = ['clear\tvoid clear()', 'clear()']
         self.assertIn(expected, completions)
         self.tear_down_completer()
-        self.tear_down()
 
     def test_complete_objc_property(self):
         """Test that we can complete Objective C properties."""
-        if not should_run_objc_tests():
+        if not should_run_objc_tests() or not self.use_libclang:
             return
         file_name = path.join(path.dirname(__file__),
                               'test_files',
@@ -224,11 +219,10 @@ class BaseTestCompleter(object):
         expected = ['boolProperty\tBOOL boolProperty', 'boolProperty']
         self.assertIn(expected, completions)
         self.tear_down_completer()
-        self.tear_down()
 
     def test_complete_objc_void_method(self):
         """Test that we can complete Objective C void methods."""
-        if not should_run_objc_tests():
+        if not should_run_objc_tests() or not self.use_libclang:
             return
         file_name = path.join(path.dirname(__file__),
                               'test_files',
@@ -252,11 +246,10 @@ class BaseTestCompleter(object):
         expected = ['voidMethod\tvoid voidMethod', 'voidMethod']
         self.assertIn(expected, completions)
         self.tear_down_completer()
-        self.tear_down()
 
     def test_complete_objc_method_one_parameter(self):
         """Test that we can complete Objective C methods with one parameter."""
-        if not should_run_objc_tests():
+        if not should_run_objc_tests() or not self.use_libclang:
             return
         file_name = path.join(path.dirname(__file__),
                               'test_files',
@@ -281,11 +274,10 @@ class BaseTestCompleter(object):
                     'oneParameterMethod:${1:(BOOL)}']
         self.assertIn(expected, completions)
         self.tear_down_completer()
-        self.tear_down()
 
     def test_complete_objc_method_multiple_parameters(self):
         """Test that we can complete Objective C methods with 2+ parameters."""
-        if not should_run_objc_tests():
+        if not should_run_objc_tests() or not self.use_libclang:
             return
         file_name = path.join(path.dirname(__file__),
                               'test_files',
@@ -312,11 +304,10 @@ class BaseTestCompleter(object):
 
         self.assertIn(expected, completions)
         self.tear_down_completer()
-        self.tear_down()
 
     def test_complete_objcpp(self):
         """Test that we can complete code in Objective-C++ files."""
-        if not should_run_objc_tests():
+        if not should_run_objc_tests() or not self.use_libclang:
             return
         file_name = path.join(path.dirname(__file__),
                               'test_files',
@@ -341,7 +332,6 @@ class BaseTestCompleter(object):
             'clear\tvoid clear()', 'clear()']
         self.assertIn(expected, completions)
         self.tear_down_completer()
-        self.tear_down()
 
     def test_unsaved_views(self):
         """Test that we gracefully handle unsaved views."""
@@ -355,7 +345,6 @@ class BaseTestCompleter(object):
         view_config_manager = ViewConfigManager()
         view_config = view_config_manager.load_for_view(self.view, settings)
         self.assertIsNone(view_config)
-        self.tear_down()
 
     def test_cooperation_with_default_completions(self):
         """Empty clang completions should not hide default completions."""
@@ -376,7 +365,6 @@ class BaseTestCompleter(object):
         self.view.run_command('auto_complete')
         self.assertTrue(self.view.is_auto_complete_visible())
         self.tear_down_completer()
-        self.tear_down()
 
     def test_get_declaration_location(self):
         """Test getting declaration location."""
@@ -403,7 +391,6 @@ class BaseTestCompleter(object):
         self.assertEqual(loc.column, 8)
 
         self.tear_down_completer()
-        self.tear_down()
 
 
 class TestBinCompleter(BaseTestCompleter, GuiTestWrapper):

@@ -1,7 +1,6 @@
 """Holds an abstract class defining a flags source."""
 from os import path
 
-from ..tools import File
 from ..tools import Tools
 from ..tools import SearchScope
 from ..utils.flag import Flag
@@ -15,7 +14,7 @@ class FlagsSource(object):
         self._include_prefixes = include_prefixes
 
     def get_flags(self, file_path=None, search_scope=None):
-        """An abstract function to gets flags for a view path.
+        """Get flags for a view path [ABSTRACT].
 
         Raises:
             NotImplementedError: Should not be called directly.
@@ -47,8 +46,8 @@ class FlagsSource(object):
             """
             flags = []
             for prefix in include_prefixes:
-                if flag.prefix() == prefix:
-                    include_path = flag.body()
+                if flag.prefix == prefix:
+                    include_path = flag.body
                     if not path.isabs(include_path):
                         include_path = path.join(folder, include_path)
                     paths = Tools.expand_star_wildcard(include_path)
@@ -58,8 +57,8 @@ class FlagsSource(object):
                     return flags
                 # this flag is not separable, check if we still need to update
                 # relative path to absolute one
-                if flag.body().startswith(prefix):
-                    include_path = flag.body()[len(prefix):]
+                if flag.body.startswith(prefix):
+                    include_path = flag.body[len(prefix):]
                     if not path.isabs(include_path):
                         include_path = path.normpath(
                             path.join(folder, include_path))
@@ -97,18 +96,3 @@ class FlagsSource(object):
         if file_path and file_path in self._cache:
             return self._cache[file_path]
         return None
-
-    def _find_current_in(self, search_scope, search_content=None):
-        """Find current path in a search scope.
-
-        Args:
-            search_scope (SearchScope): Find in a search scope.
-
-        Returns:
-            str: Path to the current flag source path.
-        """
-        return File.search(
-            file_name=self._FILE_NAME,
-            from_folder=search_scope.from_folder,
-            to_folder=search_scope.to_folder,
-            search_content=search_content).full_path()

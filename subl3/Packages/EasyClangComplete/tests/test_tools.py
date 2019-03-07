@@ -6,21 +6,33 @@ Attributes:
 """
 import sublime
 import time
+import imp
 import platform
 from os import path
 from unittest import TestCase
 
-from EasyClangComplete.plugin.settings.settings_manager import SettingsManager
-from EasyClangComplete.plugin.tools import SublBridge
-from EasyClangComplete.plugin.tools import Tools
-from EasyClangComplete.plugin.tools import File
-from EasyClangComplete.plugin.tools import PosStatus
-from EasyClangComplete.plugin.tools import PKG_NAME
-from EasyClangComplete.plugin.tools import singleton
+from EasyClangComplete.plugin import tools
+from EasyClangComplete.plugin.settings import settings_manager
+from EasyClangComplete.plugin.utils import singleton
+
+imp.reload(tools)
+imp.reload(settings_manager)
+imp.reload(singleton)
+
+singleton = singleton.singleton
+SettingsManager = settings_manager.SettingsManager
+
+SublBridge = tools.SublBridge
+Tools = tools.Tools
+File = tools.File
+SearchScope = tools.SearchScope
+PosStatus = tools.PosStatus
+PKG_NAME = tools.PKG_NAME
 
 
 class test_tools_command(TestCase):
     """Test sublime commands."""
+
     def setUp(self):
         """Set up testing environment."""
         self.view = sublime.active_window().new_file()
@@ -28,9 +40,8 @@ class test_tools_command(TestCase):
         s = sublime.load_settings("Preferences.sublime-settings")
         s.set("close_windows_when_empty", False)
 
-    def setUpView(self, filename):
-        """
-        Utility method to set up a view for a given file.
+    def set_up_view(self, filename):
+        """Set up a view for a given file.
 
         Args:
             filename (str): The filename to open in a new view.
@@ -119,7 +130,7 @@ class test_tools_command(TestCase):
     def test_wrong_triggers(self):
         """Test that we don't complete on numbers and wrong triggers."""
         self.tearDown()
-        self.setUpView(path.join('test_files', 'test_wrong_triggers.cpp'))
+        self.set_up_view(path.join('test_files', 'test_wrong_triggers.cpp'))
         # Load the completions.
         manager = SettingsManager()
         settings = manager.user_settings()
@@ -171,13 +182,17 @@ class test_tools(TestCase):
         this_folder_with_star = path.join(this_folder, '*')
         print(this_folder_with_star)
         expanded = Tools.expand_star_wildcard(this_folder_with_star)
-        folder1 = path.join(this_folder, 'cmake_tests')
-        folder2 = path.join(this_folder, 'compilation_db_files')
-        folder3 = path.join(this_folder, 'test_files')
-        self.assertEqual(len(expanded), 3)
-        self.assertIn(folder1, expanded)
-        self.assertIn(folder2, expanded)
-        self.assertIn(folder3, expanded)
+        expected_folders = [
+            path.join(this_folder, 'c_cpp_properties_files'),
+            path.join(this_folder, 'catkin_tests'),
+            path.join(this_folder, 'cmake_tests'),
+            path.join(this_folder, 'compilation_db_files'),
+            path.join(this_folder, 'CppProperties_files'),
+            path.join(this_folder, 'makefile_files'),
+            path.join(this_folder, 'test_files'),
+        ]
+        self.assertEqual(len(expanded), len(expected_folders))
+        self.assertEqual(sorted(expected_folders), sorted(expanded))
 
     def test_singleton(self):
         """Test if singleton returns a unique reference."""
@@ -199,20 +214,76 @@ class test_tools(TestCase):
         self.assertEqual(id(b), id(bb))
         self.assertNotEqual(id(a), id(b))
 
+    def test_get_clang_version(self):
+        """Test getting clang version."""
+        version = Tools.get_clang_version_str('clang++')
+        print("version: ", version)
+        self.assertIn('.', version)
+
+    def test_ignore(self):
+        """Test ignoring glob patterns."""
+        self.assertTrue(Tools.is_ignored('/tmp/hello', ['/tmp/*']))
+        self.assertTrue(Tools.is_ignored('/tmp/hello', ['/tmp*']))
+        self.assertTrue(Tools.is_ignored('/tmp/hello', ['', '/tmp*']))
+        self.assertTrue(Tools.is_ignored('/tmp/hello', ['', '/tmp/hell*']))
+        self.assertFalse(Tools.is_ignored('/tmp/hello', ['/tmp/c*']))
+
 
 class test_file(TestCase):
     """Testing file related stuff."""
+
     def test_find_file(self):
         """Test if we can find a file."""
         current_folder = path.dirname(path.abspath(__file__))
         parent_folder = path.dirname(current_folder)
+        search_scope = SearchScope(from_folder=current_folder,
+                                   to_folder=parent_folder)
         file = File.search(
-             file_name='README.md',
-             from_folder=current_folder,
-             to_folder=parent_folder)
+            file_name='README.md',
+            search_scope=search_scope)
         expected = path.join(parent_folder, 'README.md')
         self.assertTrue(file.loaded())
-        self.assertEqual(file.full_path(), expected)
+        self.assertEqual(file.full_path, expected)
+
+    def test_find_file_content_string(self):
+        """Test if we can find a file."""
+        current_folder = path.dirname(path.abspath(__file__))
+        parent_folder = path.dirname(current_folder)
+        search_scope = SearchScope(from_folder=current_folder,
+                                   to_folder=parent_folder)
+        file = File.search(
+            file_name='README.md',
+            search_scope=search_scope,
+            search_content='plugin')
+        self.assertIsNotNone(file)
+        self.assertTrue(file.loaded())
+        expected = path.join(parent_folder, 'README.md')
+        self.assertEqual(file.full_path, expected)
+        file_fail = File.search(
+            file_name='README.md',
+            search_scope=search_scope,
+            search_content='text that is not in the file')
+        self.assertIsNone(file_fail)
+
+    def test_find_file_content_list(self):
+        """Test if we can find a file."""
+        current_folder = path.dirname(path.abspath(__file__))
+        parent_folder = path.dirname(current_folder)
+        search_scope = SearchScope(from_folder=current_folder,
+                                   to_folder=parent_folder)
+        file = File.search(
+            file_name='README.md',
+            search_scope=search_scope,
+            search_content=['non existing text', 'plugin'])
+        self.assertIsNotNone(file)
+        self.assertTrue(file.loaded())
+        expected = path.join(parent_folder, 'README.md')
+        self.assertEqual(file.full_path, expected)
+        file_fail = File.search(
+            file_name='README.md',
+            search_scope=search_scope,
+            search_content=['non existing text'])
+        self.assertIsNone(file_fail)
 
     def test_canonical_path(self):
         """Test creating canonical path."""

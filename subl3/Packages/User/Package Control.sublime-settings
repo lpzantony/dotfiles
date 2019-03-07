@@ -2,15 +2,22 @@
 	"bootstrapped": true,
 	"in_process_packages":
 	[
+		"PlantUmlDiagrams"
 	],
 	"installed_packages":
 	[
 		"Agila Theme",
+		"ANSIescape",
 		"Clang Format",
 		"EasyClangComplete",
+		"fish",
 		"Gitignored File Excluder",
-		"Markdown Preview",
+		"JSON Reindent",
+		"JsonTree",
+		"MarkdownPreview",
 		"Package Control",
+		"PlantUmlDiagrams",
+		"Session Manager",
 		"Theme - Piatto"
 	]
 }

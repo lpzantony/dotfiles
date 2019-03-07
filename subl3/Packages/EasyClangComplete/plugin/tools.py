@@ -1,4 +1,4 @@
-"""This module contains various tools.
+"""Collection of various tools.
 
 Attributes:
     log (logging): logger for this module
@@ -21,8 +21,7 @@ import tempfile
 import subprocess
 
 import re
-import sys
-import imp
+
 
 PKG_NAME = path.basename(path.dirname(path.dirname(__file__)))
 
@@ -37,64 +36,12 @@ OSX_CLANG_VERSION_DICT = {
     '8.0': '3.8',
     '8.1': '3.9',
     '8.2': '3.9',
-    '9.0': '4.0'
+    '9.0': '4.0',
+    '9.1': '4.0',
+    '10.0': '6.0'
 }
 
 log = logging.getLogger("ECC")
-
-
-def singleton(class_):
-    """Singleton class wrapper.
-
-    Args:
-      class_ (Class): Class to wrap.
-
-    Returns:
-      class_: unique instance of object.
-    """
-    instances = {}
-
-    def getinstance(*args, **kwargs):
-        """Get instance of a class."""
-        if class_ not in instances:
-            instances[class_] = class_(*args, **kwargs)
-        return instances[class_]
-    return getinstance
-
-
-class Reloader:
-    """Reloader for all dependencies."""
-
-    MAX_RELOAD_TRIES = 10
-
-    @staticmethod
-    def reload_all():
-        """Reload all loaded modules."""
-        prefix = PKG_NAME + '.plugin.'
-        # reload all twice to make sure all dependencies are satisfied
-        log.debug("reload all modules first time")
-        Reloader.reload_once(prefix)
-        log.debug("reload all modules second time")
-        Reloader.reload_once(prefix)
-        log.debug("all modules reloaded")
-
-    @staticmethod
-    def reload_once(prefix):
-        """Reload all modules once."""
-        try_counter = 0
-        try:
-            for name, module in sys.modules.items():
-                if name.startswith(prefix):
-                    log.debug("reloading module: '%s'", name)
-                    imp.reload(module)
-        except OSError as e:
-            if try_counter >= Reloader.MAX_RELOAD_TRIES:
-                log.fatal("Too many tries to reload and no success. Fail.")
-                return
-            try_counter += 1
-            log.error("Received an error: %s on try %s. Try again.",
-                      e, try_counter)
-            Reloader.reload_once(prefix)
 
 
 class SublBridge:
@@ -161,6 +108,21 @@ class SublBridge:
         return (row, col)
 
     @staticmethod
+    def get_line(view, pos=None):
+        """Get next line as text.
+
+        Args:
+            view (sublime.View): current view
+
+        Returns:
+            str: text that the next line contains
+        """
+        (row, _) = SublBridge.cursor_pos(view, pos)
+        point_on_line = view.text_point(row - 1, 0)
+        line = view.line(point_on_line)
+        return view.substr(line)
+
+    @staticmethod
     def next_line(view):
         """Get next line as text.
 
@@ -194,7 +156,7 @@ class SublBridge:
 
     @staticmethod
     def show_auto_complete(view):
-        """Calling this function reopens completion popup.
+        """Reopen completion popup.
 
         It therefore subsequently calls
         EasyClangComplete.on_query_completions(...)
@@ -209,6 +171,11 @@ class SublBridge:
             'api_completions_only': False,
             'next_competion_if_showing': False})
 
+    @staticmethod
+    def show_error_dialog(message):
+        """Show an error message dialog."""
+        sublime.error_message(message)
+
 
 class PosStatus:
     """Enum class for position status.
@@ -217,10 +184,12 @@ class PosStatus:
         COMPLETION_NEEDED (int): completion needed
         COMPLETION_NOT_NEEDED (int): completion not needed
         WRONG_TRIGGER (int): trigger is wrong
+        COMPLETE_INCLUDES (int): we want to complete an include here
     """
     COMPLETION_NEEDED = 0
     COMPLETION_NOT_NEEDED = 1
     WRONG_TRIGGER = 2
+    COMPLETE_INCLUDES = 3
 
 
 class File:
@@ -247,6 +216,7 @@ class File:
         else:
             open(self.__full_path, 'a+').close()
 
+    @property
     def full_path(self):
         """Get full path to file.
 
@@ -255,6 +225,7 @@ class File:
         """
         return self.__full_path
 
+    @property
     def folder(self):
         """Get parent folder to the file.
 
@@ -263,10 +234,27 @@ class File:
         """
         return path.dirname(self.__full_path)
 
+    @property
+    def lines(self):
+        """Return as list of all lines in the file."""
+        if not self.loaded():
+            log.warning("Trying to read file that has not been loaded.")
+            return None
+        with open(self.__full_path, encoding='utf-8') as f:
+            return f.readlines()
+
     def loaded(self):
         """Check if the file is loaded."""
         if self.__full_path:
             return True
+        return False
+
+    def contains(self, query):
+        """Check if file contains a query (only lowercase)."""
+        for line in self.lines:
+            if line.lower().startswith(query):
+                log.debug("found needed line: '%s'", line.strip())
+                return True
         return False
 
     @staticmethod
@@ -321,64 +309,46 @@ class File:
         File.__modification_cache[full_path] = mod_time
 
     @staticmethod
-    def search(file_name, from_folder, to_folder, search_content=None):
+    def search(file_name, search_scope, search_content=None):
         """Search for a file up the tree.
 
         Args:
-            file_name (TYPE): Description
-            from_folder (str): path to folder where we start the search
-            to_folder (str): path to folder we should not go beyond
-            search_content (None, optional): Description
+            file_name (str): Search for the file with this name
+            search_scope (SearchScope): scope where to search for file
+            search_content (str, list, optional): the file must contain these
 
         Returns:
             File: found file
         """
-        # TODO(igor): should just take a SearchScope as input param
         log.debug("searching '%s' from '%s' to '%s'",
-                  file_name, from_folder, to_folder)
-        current_folder = from_folder
+                  file_name, search_scope.from_folder, search_scope.to_folder)
+        current_folder = search_scope.from_folder
         if not path.exists(current_folder):
-            return File()
-        one_past_stop_folder = path.dirname(to_folder)
+            return None
+        one_past_stop_folder = path.dirname(search_scope.to_folder)
         while current_folder != one_past_stop_folder:
             for file in listdir(current_folder):
                 if file == file_name:
                     found_file = File(path.join(current_folder, file))
                     log.debug("found '%s' file: %s",
-                              file_name, found_file.full_path())
-                    if search_content:
-                        if File.contains(found_file.full_path(),
-                                         search_content):
+                              file_name, found_file.full_path)
+                    if not search_content:
+                        log.debug("Nothing to search for in file so its ok.")
+                        return found_file
+                    if isinstance(search_content, list):
+                        for search_query in search_content:
+                            if found_file.contains(search_query):
+                                return found_file
+                    elif isinstance(search_content, str):
+                        if found_file.contains(search_content):
                             return found_file
-                        else:
-                            log.debug("skipping file '%s'. ", found_file)
-                            log.debug("no line starts with: '%s'",
-                                      search_content)
-                            continue
-                    # this is reached only if we don't search any content
-                    return found_file
+                    log.debug("skipping file '%s'. ", found_file)
+                    log.debug("no line starts with: '%s'", search_content)
+                    continue
             if current_folder == path.dirname(current_folder):
                 break
             current_folder = path.dirname(current_folder)
-        return File()
-
-    @staticmethod
-    def contains(file_path, query):
-        """Check if file contains a line.
-
-        Args:
-            file_path (str): path to file
-            query (str): string to search
-
-        Returns:
-            bool: True if contains str, False if not
-        """
-        with open(file_path) as f:
-            for line in f:
-                if line.lower().startswith(query):
-                    log.debug("found needed line: '%s'", line)
-                    return True
-        return False
+        return None
 
 
 class SearchScope:
@@ -474,21 +444,27 @@ class Tools:
             This guarantees that sublime text will show default completions.
         syntax_regex (regex): regex to parse syntax setting
         valid_extensions (list): list of valid extensions for auto-completion
-        valid_syntax (list): list of valid syntaxes for this plugin
 
     """
 
-    syntax_regex = re.compile("\/([^\/]+)\.(?:tmLanguage|sublime-syntax)")
+    syntax_regex = re.compile(r"\/([^\/]+)\.(?:tmLanguage|sublime-syntax)")
 
-    valid_extensions = [".c", ".cc", ".cpp", ".cxx", ".h", ".hpp", ".hxx",
-                        ".m", ".mm"]
+    LANG_TAG = "lang"
+    SYNTAXES_TAG = "syntaxes"
 
-    C_SYNTAX = ["C", "C Improved", "C99"]
-    CPP_SYNTAX = ["C++", "C++11", "C++ (Colorcoded)"]
-    OBJECTIVE_C_SYNTAX = ["Objective-C"]
-    OBJECTIVE_CPP_SYNTAX = ["Objective-C++"]
-    valid_syntax = C_SYNTAX + CPP_SYNTAX \
-        + OBJECTIVE_C_SYNTAX + OBJECTIVE_CPP_SYNTAX
+    LANG_C_TAG = "C"
+    LANG_CPP_TAG = "CPP"
+    LANG_OBJECTIVE_C_TAG = "OBJECTIVE_C"
+    LANG_OBJECTIVE_CPP_TAG = "OBJECTIVE_CPP"
+    LANG_TAGS = [LANG_C_TAG, LANG_CPP_TAG,
+                 LANG_OBJECTIVE_C_TAG, LANG_OBJECTIVE_CPP_TAG]
+
+    LANG_NAMES = {
+        LANG_C_TAG: 'c',
+        LANG_CPP_TAG: 'c++',
+        LANG_OBJECTIVE_CPP_TAG: 'objective-c++',
+        LANG_OBJECTIVE_C_TAG: 'objective-c'
+    }
 
     SHOW_DEFAULT_COMPLETIONS = None
     HIDE_DEFAULT_COMPLETIONS = ([], sublime.INHIBIT_WORD_COMPLETIONS |
@@ -511,6 +487,17 @@ class Tools:
         return expanded
 
     @staticmethod
+    def to_md(error_list):
+        """Convert an error dict to markdown string."""
+        if len(error_list) > 1:
+            # Make it a markdown list.
+            text_to_show = '\n- '.join(error_list)
+            text_to_show = '- ' + text_to_show
+        else:
+            text_to_show = error_list[0]
+        return text_to_show
+
+    @staticmethod
     def get_temp_dir():
         """Create a temporary folder if needed and return it."""
         tempdir = path.join(tempfile.gettempdir(), PKG_NAME)
@@ -519,24 +506,21 @@ class Tools:
         return tempdir
 
     @staticmethod
-    def get_view_lang(view):
+    def get_view_lang(view, settings_storage):
         """Get language from view description.
 
         Args:
             view (sublime.View): Current view
+            settings_storage (SettingsStorage): ECC settings for the view
 
         Returns:
-            str: language, "C", "C++", "Objective-C", or "Objective-C++""
+            str: language, one of LANG_TAGS or None if nothing matched
         """
         syntax = Tools.get_view_syntax(view)
-        if syntax in Tools.C_SYNTAX:
-            return "C"
-        if syntax in Tools.CPP_SYNTAX:
-            return "C++"
-        if syntax in Tools.OBJECTIVE_C_SYNTAX:
-            return "Objective-C"
-        if syntax in Tools.OBJECTIVE_CPP_SYNTAX:
-            return "Objective-C++"
+        for lang, syntaxes in settings_storage.valid_lang_syntaxes.items():
+            if syntax in syntaxes:
+                return lang
+        log.debug("ECC does nothing for language syntax: '%s'", syntax)
         return None
 
     @staticmethod
@@ -561,18 +545,39 @@ class Tools:
         return None
 
     @staticmethod
-    def has_valid_syntax(view):
+    def has_valid_syntax(view, settings_storage):
         """Check if syntax is valid for this plugin.
 
         Args:
             view (sublime.View): current view
+            settings_storage (SettingsStorage): ECC settings for this view
 
         Returns:
             bool: True if valid, False otherwise
         """
-        syntax = Tools.get_view_syntax(view)
-        if syntax in Tools.valid_syntax:
-            return True
+        lang = Tools.get_view_lang(view, settings_storage)
+        if not lang:
+            # We could not determine the language from syntax. Means the syntax
+            # is not valid for us.
+            return False
+        return True
+
+    @staticmethod
+    def is_ignored(file_name, glob_ignore_list):
+        """Check if the current view must be ignored.
+
+        Args:
+            file_name (str): current view file name
+            glob_ignore_list (str[]): a list of glob-like ignore patterns
+
+        Returns:
+            bool: True if valid, False otherwise
+        """
+        import fnmatch
+        for ignore_glob in glob_ignore_list:
+            if fnmatch.fnmatch(file_name, ignore_glob):
+                # We have found at least one matching ignore pattern.
+                return True
         return False
 
     @staticmethod
@@ -591,10 +596,6 @@ class Tools:
         if not view.file_name():
             log.debug("view file_name is None")
             return False
-        if not Tools.has_valid_syntax(view):
-            log.debug("view has wrong syntax: %s",
-                      Tools.get_view_syntax(view))
-            return False
         if view.is_scratch():
             log.debug("view is scratch view")
             return False
@@ -605,23 +606,6 @@ class Tools:
             log.debug("view file_name does not exist in system")
             return False
         return True
-
-    @staticmethod
-    def has_valid_extension(view):
-        """Test if the current file has a valid extension.
-
-        Args:
-            view (sublime.View): current view
-
-        Returns:
-            bool: extension is valid
-        """
-        if not view or not view.file_name():
-            return False
-        (_, ext) = path.splitext(view.file_name())
-        if ext in Tools.valid_extensions:
-            return True
-        return False
 
     @staticmethod
     def seconds_from_string(time_str):
@@ -679,32 +663,37 @@ class Tools:
         if settings.autocomplete_all:
             return PosStatus.COMPLETION_NEEDED
 
+        this_line = SublBridge.get_line(view, point)
+        if this_line.startswith('#include'):
+            log.debug("completing an include")
+            return PosStatus.COMPLETE_INCLUDES
         # if nothing fired we don't need to do anything
         log.debug("no completions needed")
         return PosStatus.COMPLETION_NOT_NEEDED
 
     @staticmethod
-    def run_command(command, shell=True, cwd=path.curdir, env=environ):
+    def run_command(command, shell=False, cwd=path.curdir, env=environ,
+                    stdin=None, default=None):
         """Run a generic command in a subprocess.
 
         Args:
             command (str): command to run
+            stdin: The standard input channel for the started process.
+            default (andy): The default return value in case run fails.
 
         Returns:
-            str: raw command output
+            str: raw command output or default value
         """
+        output_text = default
         try:
-            stdin = None
             startupinfo = None
-            if isinstance(command, list):
-                command = subprocess.list2cmdline(command)
-                log.debug("running command: \n%s", command)
             if sublime.platform() == "windows":
                 # Don't let console window pop-up briefly.
                 startupinfo = subprocess.STARTUPINFO()
                 startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
                 startupinfo.wShowWindow = subprocess.SW_HIDE
-                stdin = subprocess.PIPE
+                if stdin is None:
+                    stdin = subprocess.PIPE
             output = subprocess.check_output(command,
                                              stdin=stdin,
                                              stderr=subprocess.STDOUT,
@@ -717,6 +706,9 @@ class Tools:
             output_text = e.output.decode("utf-8")
             log.debug("command finished with code: %s", e.returncode)
             log.debug("command output: \n%s", output_text)
+        except OSError:
+            log.debug(
+                "executable file not found executing: {}".format(command))
         return output_text
 
     @classmethod
@@ -733,9 +725,10 @@ class Tools:
             too important to continue. If this fails the plugin will not work
             at all.
         """
-        check_version_cmd = clang_binary + " -v"
-        log.info("Getting version from command: `%s`", check_version_cmd)
-        output_text = Tools.run_command(check_version_cmd, shell=True)
+        check_version_cmd = [clang_binary, "-v"]
+        log.info("Getting version from command: `%s`",
+                 " ".join(check_version_cmd))
+        output_text = Tools.run_command(check_version_cmd, shell=False)
 
         if "Apple" in output_text:
             return cls._get_apple_clang_version_str(output_text)
@@ -745,7 +738,7 @@ class Tools:
     @classmethod
     def _get_regular_clang_version_str(cls, output_text):
         # now we have the output, and can extract version from it
-        version_regex = re.compile("\d\.\d\.*\d*")
+        version_regex = re.compile(r"\d+\.\d+\.*\d*")
         match = version_regex.search(output_text)
         if match:
             version_str = match.group()
@@ -756,12 +749,12 @@ class Tools:
 
     @classmethod
     def _get_apple_clang_version_str(cls, output_text):
-        version_regex = re.compile("\d\.\d\.*\d*")
+        version_regex = re.compile(r"\d+\.\d+\.*\d*")
         match = version_regex.search(output_text)
         if match:
             version_str = match.group()
             # throw away the patch number
-            osx_version = version_str[:3]
+            osx_version = ".".join(version_str.split(".")[:-1])
             try:
                 # info from this table:
                 # https://gist.github.com/yamaya/2924292

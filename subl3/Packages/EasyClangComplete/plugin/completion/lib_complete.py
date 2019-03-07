@@ -16,7 +16,7 @@ from ..tools import Tools
 from ..tools import SublBridge
 from ..tools import PKG_NAME
 from ..clang.utils import ClangUtils
-from ..settings.settings_storage import SettingsStorage
+from ..popups.popups import Popup
 
 from threading import RLock
 from os import path
@@ -34,8 +34,15 @@ cindex_dict = {
     '3.9': PKG_NAME + ".plugin.clang.cindex39",
     '4.0': PKG_NAME + ".plugin.clang.cindex40",
     '5.0': PKG_NAME + ".plugin.clang.cindex50",
-    '6.0': PKG_NAME + ".plugin.clang.cindex50",  # FIXME
+    '6.0': PKG_NAME + ".plugin.clang.cindex50",  # No need for newer cindex.
+    '7.0': PKG_NAME + ".plugin.clang.cindex50",  # No need for newer cindex.
+    '8.0': PKG_NAME + ".plugin.clang.cindex50",  # No need for newer cindex.
 }
+
+# Triggers that should show types.
+GLOBAL_TRIGGERS = [":", "\t", " "]
+# All symbols that can be part of a valid trigger.
+ALLOWED_TRIGGER_SYMBOLS = [":", " ", "\t", ".", "-", ">"]
 
 
 class Completer(BaseCompleter):
@@ -100,11 +107,12 @@ class Completer(BaseCompleter):
             # to figure out the path libclang.
             if not self.cindex.Config.loaded:
                 # This will return something like /.../lib/clang/3.x.0
-                libclang_dir = ClangUtils.find_libclang_dir(
+                libclang_dir, libclang_file = ClangUtils.find_libclang(
                     settings.clang_binary,
                     settings.libclang_path,
                     settings.clang_version)
                 if libclang_dir:
+                    self.cindex.Config.set_library_file(libclang_file)
                     self.cindex.Config.set_library_path(libclang_dir)
 
             # check if we can build an index. If not, set valid to false
@@ -231,7 +239,12 @@ class Completer(BaseCompleter):
         else:
             point = completion_request.get_trigger_position()
             trigger = view.substr(point - 2) + view.substr(point - 1)
-            if trigger != "::":
+            log.debug("Current trigger: '%s'", trigger)
+            # We clean trigger from all symbols that cannot be part of one.
+            sanitized_trigger = ''.join(
+                [c for c in trigger if c in ALLOWED_TRIGGER_SYMBOLS])
+            log.debug("Current sanitized_trigger: '%s'", sanitized_trigger)
+            if sanitized_trigger not in GLOBAL_TRIGGERS:
                 excluded = self.bigger_ignore_list
             else:
                 excluded = self.default_ignore_list
@@ -255,10 +268,22 @@ class Completer(BaseCompleter):
                 info details read from the translation unit.
 
         """
-        empty_info = (tooltip_request, "")
+        objc_types = [
+            self.cindex.CursorKind.OBJC_MESSAGE_EXPR,
+            self.cindex.CursorKind.OBJC_CLASS_METHOD_DECL,
+            self.cindex.CursorKind.OBJC_INSTANCE_METHOD_DECL,
+            self.cindex.CursorKind.OBJC_CATEGORY_DECL,
+            self.cindex.CursorKind.OBJC_INTERFACE_DECL,
+            self.cindex.CursorKind.OBJC_PROTOCOL_DECL,
+            self.cindex.CursorKind.OBJC_CATEGORY_IMPL_DECL,
+            self.cindex.CursorKind.OBJC_IMPLEMENTATION_DECL,
+            self.cindex.CursorKind.OBJC_CLASS_REF,
+            self.cindex.CursorKind.OBJC_PROTOCOL_REF,
+        ]
+        empty_info = (tooltip_request, None)
         with Completer.rlock:
             if not self.tu:
-                return (tooltip_request, "")
+                return empty_info
             view = tooltip_request.get_view()
             (row, col) = SublBridge.cursor_pos(
                 view, tooltip_request.get_trigger_position())
@@ -267,14 +292,13 @@ class Completer(BaseCompleter):
                 self.tu, self.tu.get_location(view.file_name(), (row, col)))
             if not cursor:
                 return empty_info
-            if cursor.kind == self.cindex.CursorKind.OBJC_MESSAGE_EXPR:
-                info_details = ClangUtils.build_objc_message_info_details(
-                    cursor)
-                return (tooltip_request, info_details)
+            if cursor.kind in objc_types:
+                info_popup = Popup.info_objc(cursor, self.cindex, settings)
+                return tooltip_request, info_popup
             if cursor.referenced:
-                info_details = ClangUtils.build_info_details(
+                info_popup = Popup.info(
                     cursor.referenced, self.cindex, settings)
-                return (tooltip_request, info_details)
+                return tooltip_request, info_popup
             return empty_info
 
     def update(self, view, settings):
@@ -322,13 +346,19 @@ class Completer(BaseCompleter):
             if not self.tu:
                 log.error("translation unit is not available. Not reparsing.")
                 return False
+
+            # Prepare unsaved files.
+            file_name = view.file_name()
+            file_body = view.substr(sublime.Region(0, view.size()))
+            unsaved_files = [(file_name, file_body)]
+
             start = time.time()
-            self.tu.reparse()
+            self.tu.reparse(unsaved_files=unsaved_files)
             end = time.time()
             log.debug("reparsed in %s seconds", end - start)
             # Store and potentially show errors to the user.
             self.save_errors(self.tu.diagnostics)  # Store for the future.
-            if settings.errors_style != SettingsStorage.NONE_STYLE:
+            if settings.show_errors:
                 self.show_errors(view)
             return True
         log.error("no translation unit for view id %s", v_id)

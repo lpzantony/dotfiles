@@ -1299,7 +1299,7 @@ class Cursor(Structure):
     def result_type(self):
         """Retrieve the Type of the result for this Cursor."""
         if not hasattr(self, '_result_type'):
-            self._result_type = conf.lib.clang_getResultType(self.type)
+            self._result_type = conf.lib.clang_getCursorResultType(self)
 
         return self._result_type
 
@@ -1791,6 +1791,12 @@ class Type(Structure):
         res._tu = tu
 
         return res
+
+    def get_num_template_arguments(self):
+        return conf.lib.clang_Type_getNumTemplateArguments(self)
+
+    def get_template_argument_type(self, num):
+        return conf.lib.clang_Type_getTemplateArgumentAsType(self, num)
 
     def get_canonical(self):
         """
@@ -2321,7 +2327,7 @@ class TranslationUnit(ClangObject):
 
                 unsaved_array[i].name = name.encode('utf8')
                 unsaved_array[i].contents = contents.encode('utf8')
-                unsaved_array[i].length = len(contents)
+                unsaved_array[i].length = len(unsaved_array[i].contents)
 
         ptr = conf.lib.clang_parseTranslationUnit(index, filename.encode('utf8'), args_array,
                                     len(args), unsaved_array,
@@ -2501,9 +2507,10 @@ class TranslationUnit(ClangObject):
                     print(value)
                 if not isinstance(value, str):
                     raise TypeError('Unexpected unsaved file contents.')
-                unsaved_files_array[i].name = name
-                unsaved_files_array[i].contents = value
-                unsaved_files_array[i].length = len(value)
+                unsaved_files_array[i].name = name.encode('utf-8')
+                unsaved_files_array[i].contents = value.encode('utf-8')
+                unsaved_files_array[i].length = \
+                    len(unsaved_files_array[i].contents)
         ptr = conf.lib.clang_reparseTranslationUnit(self, len(unsaved_files),
                 unsaved_files_array, options)
 
@@ -2567,7 +2574,8 @@ class TranslationUnit(ClangObject):
                     raise TypeError('Unexpected unsaved file contents.')
                 unsaved_files_array[i].name = name.encode('utf8')
                 unsaved_files_array[i].contents = value.encode('utf8')
-                unsaved_files_array[i].length = len(value)
+                unsaved_files_array[i].length = \
+                    len(unsaved_files_array[i].contents)
         ptr = conf.lib.clang_codeCompleteAt(self, path.encode('utf8'), line, column,
                 unsaved_files_array, len(unsaved_files), options)
         if ptr:
@@ -3030,6 +3038,11 @@ functionList = [
   ("clang_getCursorReferenceNameRange",
    [Cursor, c_uint, c_uint],
    SourceRange),
+
+  ("clang_getCursorResultType",
+   [Cursor],
+   Type,
+   Type.from_result),
 
   ("clang_getCursorSemanticParent",
    [Cursor],
@@ -3551,14 +3564,20 @@ class Config:
         if Config.library_file:
             return Config.library_file
 
-        from .utils import ClangUtils
-        from os import path
-        filename = ClangUtils.libclang_name
+        import platform
+        name = platform.system()
+
+        if name == 'Darwin':
+            file = 'libclang.dylib'
+        elif name == 'Windows':
+            file = 'libclang.dll'
+        else:
+            file = 'libclang.so'
 
         if Config.library_path:
-            filename = path.join(Config.library_path, filename)
+            file = Config.library_path + '/' + file
 
-        return filename
+        return file
 
     def get_cindex_library(self):
         try:

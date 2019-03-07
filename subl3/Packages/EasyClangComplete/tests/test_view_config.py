@@ -4,6 +4,7 @@ import sublime
 from os import path
 
 from EasyClangComplete.plugin.settings import settings_manager
+from EasyClangComplete.plugin.settings import settings_storage
 from EasyClangComplete.plugin import view_config
 from EasyClangComplete.plugin import tools
 
@@ -11,6 +12,7 @@ from EasyClangComplete.tests import gui_test_wrapper
 
 imp.reload(gui_test_wrapper)
 imp.reload(settings_manager)
+imp.reload(settings_storage)
 imp.reload(view_config)
 imp.reload(tools)
 
@@ -30,7 +32,6 @@ class TestViewConfig(GuiTestWrapper):
                               'test_files',
                               'test.cpp')
         self.check_view(file_name)
-        self.tear_down()
 
     def test_init(self):
         """Test initializing a view configuration."""
@@ -43,7 +44,6 @@ class TestViewConfig(GuiTestWrapper):
         view_config = ViewConfig(self.view, settings)
 
         self.assertIsNotNone(view_config.completer)
-        self.tear_down()
 
     def test_flags(self):
         """Test that flags are properly defined for a completer."""
@@ -53,6 +53,7 @@ class TestViewConfig(GuiTestWrapper):
         self.set_up_view(file_name)
         manager = SettingsManager()
         settings = manager.settings_for_view(self.view)
+        settings.use_default_includes = False
         view_config = ViewConfig(self.view, settings)
 
         self.assertIsNotNone(view_config.completer)
@@ -65,21 +66,25 @@ class TestViewConfig(GuiTestWrapper):
             if "common_flags" in user:
                 # The user modified the default common flags, just skip the
                 # next few tests.
-                self.tear_down()
                 return
         completer = view_config.completer
+        print(completer.clang_flags)
         self.assertEqual(len(completer.clang_flags), 14)
         # test from the start
         self.assertEqual(completer.clang_flags[0], '-c')
         self.assertEqual(completer.clang_flags[1], '-fsyntax-only')
         self.assertEqual(completer.clang_flags[2], '-x')
         self.assertEqual(completer.clang_flags[3], 'c++')
-        self.assertEqual(completer.clang_flags[4], '-std=c++11')
-        # test last one
+        self.assertEqual(completer.clang_flags[-1], '-std=c++14')
+
         expected = path.join(path.dirname(
             path.dirname(__file__)), 'local_folder')
-        self.assertEqual(completer.clang_flags[12], '-I' + expected)
-        self.tear_down()
+        # test include folders
+        self.assertEqual(len(view_config.include_folders), 8)
+        self.assertTrue(expected in view_config.include_folders)
+
+        # test include flag
+        self.assertEqual(completer.clang_flags[11], '-I' + expected)
 
     def test_unsaved_views(self):
         """Test that we gracefully handle unsaved views."""
@@ -93,7 +98,6 @@ class TestViewConfig(GuiTestWrapper):
         view_config = ViewConfig(self.view, settings)
         completer = view_config.completer
         self.assertIsNone(completer)
-        self.tear_down()
 
     def test_needs_update(self):
         """Test view config changing when needed."""
@@ -112,7 +116,6 @@ class TestViewConfig(GuiTestWrapper):
         is_update_needed = view_config.needs_update(
             view_config.completer, flags)
         self.assertTrue(is_update_needed)
-        self.tear_down()
 
     def test_needs_update_on_file_change(self):
         """Test view config changing when file changed."""
@@ -127,7 +130,6 @@ class TestViewConfig(GuiTestWrapper):
         self.view.window().run_command("save")
         is_reparse_needed = ViewConfig.needs_reparse(self.view)
         self.assertTrue(is_reparse_needed)
-        self.tear_down()
 
     def test_age(self):
         """Test view config age."""
@@ -144,9 +146,8 @@ class TestViewConfig(GuiTestWrapper):
         self.assertTrue(view_config.get_age() > 3)
         view_config.touch()
         self.assertTrue(view_config.get_age() < 3)
-        time.sleep(3)
+        time.sleep(4)
         self.assertTrue(view_config.is_older_than(3))
-        self.tear_down()
 
 
 class TestViewConfigManager(GuiTestWrapper):
@@ -158,7 +159,6 @@ class TestViewConfigManager(GuiTestWrapper):
                               'test_files',
                               'test.cpp')
         self.check_view(file_name)
-        self.tear_down()
 
     def test_update(self):
         """Test that update is triggered."""
@@ -175,7 +175,6 @@ class TestViewConfigManager(GuiTestWrapper):
         view_config = config_manager.load_for_view(self.view, settings)
         self.assertEqual(view_config.completer.name, "bin")
         config_manager.clear_for_view(self.view.buffer_id())
-        self.tear_down()
 
     def test_remove(self):
         """Test that config is removed."""
@@ -191,7 +190,6 @@ class TestViewConfigManager(GuiTestWrapper):
         config_manager.clear_for_view(self.view.buffer_id())
         view_config = config_manager.get_from_cache(self.view)
         self.assertIsNone(view_config)
-        self.tear_down()
 
     def test_timer(self):
         """Test that config is removed on timer."""
@@ -212,4 +210,3 @@ class TestViewConfigManager(GuiTestWrapper):
         view_config = config_manager.get_from_cache(self.view)
         self.assertIsNone(view_config)
         ViewConfigManager._ViewConfigManager__timer_period = initial_period
-        self.tear_down()

@@ -22,14 +22,15 @@
     // this is needed to include the correct headers for clang
     "-I/usr/lib/clang/$clang_version/include",
   ],
-  // C specific flags. Prepend common_flags for C files.
-  "c_flags" : [ "-std=c11" ],
-  // C++ specific flags. Prepend common_flags for C++ files.
-  "cpp_flags" : [ "-std=c++11" ],
-  // Objective-C specific flags. Prepend common_flags for Objective-C files.
-  "objective_c_flags" : [ "-std=c11" ],
-  // Objective-C++ specific flags. Prepend common_flags for Objective-C++ files.
-  "objective_cpp_flags" : [ "-std=c++11" ],
+
+  // Language-specific flags. Prepend common_flags for files of given language.
+  // When adapting to your needs, make sure to keep all language keys.
+  "lang_flags": {
+    "C": ["-std=c11"],
+    "CPP": ["-std=c++11"],
+    "OBJECTIVE_C": ["-std=c11"],
+    "OBJECTIVE_CPP": ["-std=c++11"],
+  },
 
   // Define how we search needed flags. Prioritized from top to bottom.
   // Possible entries for "file":
@@ -48,24 +49,53 @@
   "flags_sources": [
     {"file": "CMakeLists.txt"},
     {"file": "compile_commands.json"},
+    {"file": "CppProperties.json"},
+    {"file": "c_cpp_properties.json"},
     {"file": ".clang_complete"},
   ],
 
-  // Show compile errors in this style on file save.
-  // Possible styles: "popups", "phantoms", "none"
-  "errors_style": "popups",
+  // Show compile errors on file save or not.
+  "show_errors": true,
 
   // Show gutter icon for highlighted errors on the side bar.
-  // Possible styles: "color", "mono", "none"
+  // Possible styles: "color", "mono", "dot", "none"
   "gutter_style": "color",
 
-  // triggers for auto-completion
+  // Maximum width and height for popups eg. declaration info.
+  "popup_maximum_width": 1800,
+  "popup_maximum_height": 800,
+
+  // Triggers for auto-completion
   "triggers" : [ ".", "->", "::", " ", "	", "(", "[" ],
+
+  // A dictionary that defines a mapping from language to an array of valid
+  // syntaxes for it. The values here are good defaults, but feel free to
+  // customize the list to your liking. When modifying this setting make sure
+  // that all 4 languages have values.
+  "valid_lang_syntaxes": {
+    "C":              ["C", "C Improved", "C99"],
+    "CPP":            ["C++", "C++11"],
+    "OBJECTIVE_C":    ["Objective-C"],
+    "OBJECTIVE_CPP":  ["Objective-C++"]
+  },
+
+  // Do not run the plugin for any files that match these paths. Use
+  // glob/fnmatch shell-style filename expansion. In addition, you can still use
+  // '~' to mark the home directory.
+  "ignore_list": [
+    "~/some_folder/*",
+    "/some/absolute/file.ext",
+    "$project_base_path/some/project/path/*",
+  ],
 
   // Use libclang.
   // If set to false will use clang_binary and parse the output of
   // `clang_binary -Xclang -code-complete-at...` instead.
   "use_libclang" : true,
+
+  // Use default includes that we get from running the command:
+  // `clang_binary -c /tmp/test.cc -v`
+  "use_default_includes": true,
 
   // make plugin verbose
   "verbose" : false,
@@ -76,12 +106,15 @@
   // add parent folder of the current file's one with `-I` flag
   "include_file_parent_folder" : true,
 
-  // pick the clang binary used by the plugin. This is used to determine the
-  // version of the plugin and pick correct libclang bindings.
+  // Pick the clang binary used by the plugin. This is used to determine the
+  // version of the plugin and pick correct libclang bindings. Note that this
+  // should either be a full path to the binary or it should be available in
+  // your PATH.
   "clang_binary" : "clang++",
 
   // pick the binary used for cmake. Please make sure the binary you provide is
-  // accessible from the command line on your system.
+  // accessible from the command line on your system. Note that this should
+  // either be a full path to the binary or it should be available in your PATH.
   "cmake_binary" : "cmake",
 
   // ignore triggers and try to complete after each character
@@ -103,8 +136,15 @@
   // Show body of struct/class/typedef declaration.
   "show_type_body" : true,
 
-  // On some esoteric systems we cannot find libclang properly.
-  // If you know where your libclang is - set the full path here.
+  // We only can get declarations from clang AST. This will show references to
+  // the symbol under cursor taking them from Sublime Text index.
+  "show_index_references": true,
+
+  // If the libclang library cannot be found in standard places, the user can
+  // provide a path to `libclang`. This path can either be a full path to the
+  // libclang library, e.g. `/usr/lib/libclang.so` or a folder that contains
+  // libclang library, e.g. `/usr/lib/`. This setting generally should not be
+  // needed.
   "libclang_path": "<some_path_here>",
 
   // Pick the progress style. There are currently these styles available:
@@ -152,4 +192,19 @@
     // "exotic" file name suffix:
     // "{stamp}.mycustomext
   ],
+
+// Controls if we try to retrieve built-in flags from a target compiler. This
+// option is used when we use a `compile_commands.json` file either directly or
+// indirectly e.g. via CMake. If a compiler is not `null`, we try to ask it for
+// the defines and include paths it sets implicitly and pass them to the clang
+// compiler which is used to generate the code completion. If your completions
+// require the knowledge about the toolchain, this option should improve the
+// quality of the completions, however, in some corner cases it might cause
+// completions to fail entirely.
+  "target_compilers": {
+    "C":              null,
+    "CPP":            null,
+    "OBJECTIVE_C":    null,
+    "OBJECTIVE_CPP":  null
+  },
 }
