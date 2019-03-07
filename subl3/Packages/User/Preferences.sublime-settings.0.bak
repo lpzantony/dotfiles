@@ -1,0 +1,98 @@
+{
+	"bold_folder_labels": true,
+	"color_scheme": "Packages/Color Scheme - Default/Monokai.tmTheme",
+	"extra_file_exclude_patterns":
+	[
+		"*.pyc",
+		"*.pyo",
+		"*.exe",
+		"*.dll",
+		"*.obj",
+		"*.o",
+		"*.a",
+		"*.lib",
+		"*.so",
+		"*.dylib",
+		"*.ncb",
+		"*.sdf",
+		"*.suo",
+		"*.pdb",
+		"*.idb",
+		".DS_Store",
+		"*.class",
+		"*.psd",
+		"*.db",
+		"*.sublime-workspace",
+		"*.gdbinit",
+		"*.gitignore"
+	],
+	"extra_folder_exclude_patterns":
+	[
+		".svn",
+		".git",
+		".hg",
+		"CVS",
+		"build"
+	],
+	"file_exclude_patterns":
+	[
+		"*.pyc",
+		"*.pyo",
+		"*.exe",
+		"*.dll",
+		"*.obj",
+		"*.o",
+		"*.a",
+		"*.lib",
+		"*.so",
+		"*.dylib",
+		"*.ncb",
+		"*.sdf",
+		"*.suo",
+		"*.pdb",
+		"*.idb",
+		".DS_Store",
+		"*.class",
+		"*.psd",
+		"*.db",
+		"*.sublime-workspace",
+		"/volumes/sdata/TPT/3A/SE302/git/TP/TP_STM32/build/az_TP_STM32.hex",
+		"/volumes/sdata/TPT/3A/SE302/git/TP/TP_STM32/build/az_TP_STM32.bin",
+		"/volumes/sdata/TPT/3A/SE302/git/TP/TP_STM32/build/az_TP_STM32.elf",
+		"/volumes/sdata/TPT/3A/SE302/git/TP/TP_STM32/build/az_TP_STM32.dmp",
+		"/volumes/sdata/TPT/3A/SE302/git/TP/TP_STM32/build/az_TP_STM32.list",
+		"/volumes/sdata/TPT/3A/SE302/git/TP/TP_STM32/build/az_TP_STM32.map"
+	],
+	"folder_exclude_patterns":
+	[
+		".svn",
+		".git",
+		".hg",
+		"CVS",
+		"/volumes/sdata/TPT/3A/SE302/git/TP/TP_STM32/build/obj",
+		"/volumes/sdata/TPT/3A/SE302/git/TP/TP_STM32/build/lst",
+		"/volumes/sdata/TPT/3A/SE302/git/TP/TP_STM32/.dep",
+		"/volumes/sdata/TPT/3A/SE302/git/TP/ChibiOS_17.6.1/doc/hal/html"
+	],
+	"font_size": 12,
+	"highlight_line": false,
+	"highlight_modified_tabs": true,
+	"ignored_packages":
+	[
+		"PlantUmlDiagrams",
+		"Vintage"
+	],
+	"line_padding_bottom": 3,
+	"line_padding_top": 3,
+	"overlay_scroll_bars": "enabled",
+	"rulers":
+	[
+		80,
+		100,
+		120
+	],
+	"tab_size": 2,
+	"theme": "Piatto Dark.sublime-theme",
+	"trim_trailing_white_space_on_save": true,
+	"update_check": false
+}

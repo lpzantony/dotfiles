@@ -1,0 +1,144 @@
+
+@startuml
+  skinparam defaultFontName Consolas
+
+  AddObjectWindow <|--  ViewPortObserver
+  AddObjectWindow  *--  ViewPort           : viewPort*
+
+  DisplayFile           -left[hidden]> ViewWindow
+  DisplayFile    "1\n"  *-down- "*" DrawableObject
+
+  Line    <|-up- DrawableObject
+  Point   <|-up- DrawableObject
+  Polygon <|-up- DrawableObject
+
+Class01 <|-- Class02
+Class03 *-- Class04
+Class05 o-- Class06
+Class07 .. Class08
+Class09 -- Class10
+
+
+Class11 <|.. Class12
+Class13 --> Class14
+Class15 ..> Class16
+Class17 ..|> Class18
+Class19 <--* Class20
+
+
+Class21 #-- Class22
+Class23 x-- Class24
+Class25 }-- Class26
+Class27 +-- Class28
+Class29 ^-- Class30
+
+
+  MainWindow *-down-  ViewPort             : viewPort
+  MainWindow *-right- AddObjectWindow      : addObjectWindow
+  MainWindow *-left-  TransformationWindow : transformationWindow
+
+  TransformationWindow  *--  ViewPort      : viewPort*
+  TransformationWindow  *-down- Transformation: transformation
+  Transformation "1" *-- "*" TransformationData: transformations
+
+  ViewPort   *--  ViewWindow               : viewWindow
+  ViewPort   *-down-  DisplayFile          : displayFile
+  ViewPort   *-right- ViewPortObservers    : viewPortObservers
+
+  ViewPortObservers "1" *-up- "*" ViewPortObserver : observers
+
+  class AddObjectWindow {
+    Gtk::Grid              point_grid
+    Gtk::Grid              line_grid
+    Gtk::Grid              polygn_grid
+    std::list<Coordinate*> polygon_cord_list
+  }
+
+  class DisplayFile {
+    std::map< string, DrawableObject* >
+    void addObject   (DrawableObject* object)
+    void removeObject(DrawableObject* object)
+
+    void removeObjectByName(std::string name)
+    void apply(std::string object_name, Transformation)
+  }
+
+  class DrawableObject {
+    std::string       getName()
+    list<Coordinate*> getCoordinates()
+    void              apply(Transformation)
+  }
+
+  class Line {
+    Line(std::string name, Coordinate*, Coordinate*)
+  }
+
+  class Point {
+    Point(std::string name, Coordinate*)
+  }
+
+  class Polygon {
+    Polygon(std::string name, list<Coordinate*>)
+  }
+
+  class MainWindow {
+    Gtk::Box        main_box
+    Gtk::Box        left_box
+    Gtk::Frame      left_frame
+    Gtk::Frame      right_frame
+    ViewPort        viewPort
+    AddObjectWindow addObjectWindow
+  }
+
+  class Transformation {
+    Matrix _transformation
+    Coordinate apply(Coordinate)
+    void set_geometric_center(Coordinate)
+  }
+
+  class TransformationData {
+    Matrix main_matrix
+    Coordinate rotation_center
+  }
+
+  class TransformationWindow {
+    Gtk::Grid   rotation_grid
+    Gtk::Grid   scaling_grid
+    Gtk::Grid   translation_grid
+  }
+
+  class ViewPort {
+    int Xvpmin
+    int Yvpmin
+    int Xvpmax
+    int Yvpmax
+    bool on_draw(const Cairo::Context>&)
+    void updateViewport(Gtk::Allocation)
+
+    Coordinate convertCoordinateFromWindow(Coordinate)
+    void apply(std::string object_name, Transformation)
+  }
+
+  class ViewPortObserver {
+    void updateDropdownList()
+  }
+
+  class ViewPortObservers {
+    void notifyObservers()
+    void addObserver(ViewPortObserver*)
+  }
+
+  class ViewWindow {
+    float Xwmin
+    float Ywmin
+    float Xwmax
+    float Ywmax
+    void zoom_in (float scale)
+    void zoom_out(float scale)
+    void move_up    (int length)
+    void move_down  (int length)
+    void move_left  (int length)
+    void move_right (int length)
+  }
+
+@enduml

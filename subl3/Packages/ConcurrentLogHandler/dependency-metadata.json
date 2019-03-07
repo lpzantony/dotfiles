@@ -1,0 +1,1 @@
+{"platforms": ["*"], "url": "https://github.com/evandroforks/ConcurrentLogHandler/issues", "version": "0.9.12", "sublime_text": ">=3114", "description": "An additional concurrent file log handler for Python's standard logging package"}
