@@ -11,6 +11,8 @@
 if [ "${1}" == "pre" ]; then
   # Do the thing you want before suspend here, e.g.:
     sudo modprobe -r r8168
+    sudo modprobe -r psmouse
 elif [ "${1}" == "post" ]; then    
     sudo modprobe r8168
+    sudo modprobe psmouse
 fi
